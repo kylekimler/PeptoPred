@@ -1,10 +1,13 @@
 # PeptoPred
 
-1.16.18 Day 1:
+2.16.18 Day 1:
 Learned to use git on shell. Is it wise to commit new project file structure to git? For now, just committing diary to git repo.
 
-1.18.18 Day 3:
+2.18.18 Day 3:
 Learned to do some one-liners and use wildcards (star, questionmark) on shell. Maybe I can use them to commit all files in repo at once.
 
-1.19.18 Day 4:
+2.19.18 Day 4:
 Starting the switch to Sublime Text! Was able to enter link to Sublime.app in PATH for easy terminal access. Also created little folder maker script, but for what purpose? After reading the quick guide to computational bio, I have many more questions than answers. What is a make file? Maybe this folder maker script will be useful once we have makefiles, specific calls to parsers and more.
+
+3.2.18 Day ?:
+Created a very ugly encoder using a hard-coded feature map and a few bad if-for statements. I wonder if we could use binary to encode each amino acid using only 5 1/0's - would only take 5 positions instead of 20. First it's more important to test feeding into svm or randomforest. Enjoyed the whale talk today. My favorite blog is http://infoproc.blogspot.com/
