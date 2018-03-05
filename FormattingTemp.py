@@ -107,7 +107,45 @@ def FormatAndFit(parsedseqs, parsedclasses, windowsize):
 	clf.fit(features,classifications)
 	return clf
 
+def FormatSansDicts(PSSMarray, PSSMclasses, windowsize):
+	features = []
+	classifications = []
+	for PSSM in PSSMarray:
+		count = 0
+		for aa in str(PSSM):
+			if aa<windowsize//2:
+				flist=[]
+				flist.extend(aaIndex['?']*(windowsize//2-aa))
+				z=0
+				while z <= aa+windowsize//2:
+					flist.extend(aaIndex[parsedseqs[key][z]])
+					z+=1
+				features.append(flist)
+			elif len(parsedseqs[key])-windowsize//2 > aa >= (windowsize//2-1):
+				middlewindow = []
+				middlewindow.extend(zz for zz in PSSM[aa-(windowsize//2):aa+(windowsize//2)+1])
+				features.append(middlewindow)
+			elif(aa>=(len(parsedseqs[key])-windowsize//2)-1):
+				elist=[]
+				z = aa - (windowsize//2)
+				while z <= len(parsedseqs[key]) - 1:
+					elist.extend(aaIndex[parsedseqs[key][z]])
+					z+=1
+				elist.extend(aaIndex['?'] * (aa+windowsize//2-(len(parsedseqs[key])-1)))
+				features.append(elist)
+		classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
+		#print(parsedclasses[key])
+		classifications.extend(classified)
+		count+=1
+
+	# Will probably need to parse PSSM file somehow - let's do that with another function - and into a list.
+
+# small prediction test! do a list(clf.predict(from testpeps2.txt))
+# maybe we do need to do this inside the for loop - with an if statement ? 
+
+
 joblib.dump(FormatAndFit(parsedseqdict,parsedclassdict,5), 'test.pkl')
 print ("\nDumped the model in %0.2f seconds.\n" %(time.time()-call))
+
 
 print(FormatAndFit(parsedseqdict,parsedclassdict,5))
