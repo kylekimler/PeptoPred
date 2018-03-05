@@ -1,10 +1,9 @@
-#parse for creation of data dictionaries - one for signal classification and one for sequence
 import time
 import os.path
 import sys
+from sklearn import svm
 import sklearn
 import sklearn.externals
-from sklearn.feature_extraction import DictVectorizer
 
 def parse_fasta(filename):
     inputfasta=open(filename,'r')
@@ -12,6 +11,8 @@ def parse_fasta(filename):
     for z in range(0,len(stringmaker)-1,3):
         stringmaker[z]=stringmaker[z].lstrip('>')
     parsedseqs = {stringmaker[x]: stringmaker[x+1] for x in range(0,len(stringmaker)-1,3)}
+    inputfasta.close()
+    #print(parsedseqs)
     return parsedseqs
 
 def parse_classes(filename):
@@ -21,10 +22,11 @@ def parse_classes(filename):
         stringmaker[z]=stringmaker[z].lstrip('>')
     parsedclasses = {stringmaker[x]: stringmaker[x+2] for x in range(0,len(stringmaker)-1,3)}
     inputfasta.close()
-    return parsedclasses
-    #print(parsedseqs)
     #print(parsedclasses)
-#parse_fasta('globular_signal_peptide_2state.3line.txt')
+    return parsedclasses
+
+parsedseqdict = parse_fasta('testpeps.txt')
+parsedclassdict = parse_classes('testpeps.txt')
 
 aaIndex = {'A':(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 'C':(0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -46,7 +48,11 @@ aaIndex = {'A':(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 'V':(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0),
 'W':(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0),
 'Y':(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1),
-'?':(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)}
+'?':(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'X':(0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05),
+'B':(0,0,0.5,0,0,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0),
+'Z':(0,0,0,0.5,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,0,0),
+'J':(0,0,0,0,0,0,0,0.5,0,0.5,0,0,0,0,0,0,0,0,0,0)}
 
 SpIndex = {'S':0,'G':1}
 
@@ -59,13 +65,16 @@ SpIndex = {'S':0,'G':1}
 #FE = sklearn.preprocessing.OneHotEncoder(n_values=21)
 #print(FE)
 
-def slidingwindows(parsedseqs, parsedclasses, windowsize):
+def FormatAndFit(parsedseqs, parsedclasses, windowsize):
     protslist = list(parsedseqs.values())
     classeslist = list(parsedclasses.values())
+    print(classeslist)
     #indexlist = [aaIndex(z) for z in str(parse_fasta('x').values())]
     #print(indexlist)
+    features = []
+    classifications = []
     for prot in protslist:
-        features = []
+        count = 0
         for x in range(0,len(prot)):
             if x<windowsize//2:
                 flist=[]
@@ -76,11 +85,9 @@ def slidingwindows(parsedseqs, parsedclasses, windowsize):
                     z+=1
                 features.append(flist)
             elif len(prot)-windowsize//2 > x >= (windowsize//2-1):
-                this = prot[x-(windowsize//2):x+(windowsize//2)+1]
-                thislist=[]
-                for g in this:
-                    thislist.extend(aaIndex[g])
-                features.append(thislist)
+                middlewindow = []
+                middlewindow.extend(zz for attribute in prot[x-(windowsize//2):x+(windowsize//2)+1] for zz in aaIndex[attribute])
+                features.append(middlewindow)
             elif(x>=(len(prot)-windowsize//2)-1):
                 elist=[]
                 z = x - (windowsize//2)
@@ -89,8 +96,12 @@ def slidingwindows(parsedseqs, parsedclasses, windowsize):
                     z+=1
                 elist.extend(aaIndex['?'] * (x+windowsize//2-(len(prot)-1)))
                 features.append(elist)
-        classifications = [SpIndex[attribute] for attribute in classeslist[0]]
-        break
-    return features, classifications
+        #classifications.append(xx for attribute in parsedclasses(parsedseqs.key(prot)) for xx in SpIndex[attribute])
+        print(parsedclasses(parsedseqs[prot]))
+        #print(classifications)
+        count+=1
+    clf = svm.SVC()
+    clf.fit(features,classifications)
+    return clf
 
-slidingwindows(parse_fasta('globular_signal_peptide_2state.3line.txt'),parse_classes('globular_signal_peptide_2state.3line.txt'),5)
+print(FormatAndFit(parsedseqdict,parsedclassdict,5))
