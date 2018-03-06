@@ -1,5 +1,5 @@
 import time
-import os.path
+import joblib
 import sys
 from sklearn import svm
 import sklearn
@@ -7,7 +7,7 @@ import sklearn.externals
 
 call = time.time()
 
-def parse_fasta(filename):
+def ParseSeqs(filename):
 	inputfasta=open(filename,'r')
 	stringmaker = [str(line.rstrip('\n')) for line in inputfasta]
 	for z in range(0,len(stringmaker)-1,3):
@@ -17,7 +17,7 @@ def parse_fasta(filename):
 	# print(parsedseqs)
 	return parsedseqs
 
-def parse_classes(filename):
+def ParseClasses(filename):
 	inputfasta=open(filename,'r')
 	stringmaker = [str(line.rstrip('\n')) for line in inputfasta]
 	for z in range(0,len(stringmaker),3):
@@ -27,8 +27,8 @@ def parse_classes(filename):
 	# print(parsedclasses)
 	return parsedclasses
 
-parsedseqdict = parse_fasta('testpeps.txt')
-parsedclassdict = parse_classes('testpeps.txt')
+# parsedseqdict = parse_fasta('testpeps.txt')
+# parsedclassdict = parse_classes('testpeps.txt')
 
 aaIndex = {'A':(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 'C':(0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -58,25 +58,19 @@ aaIndex = {'A':(1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 
 SpIndex = {'S':0,'G':1}
 
-'''aaIndex2 = {'A':1, 'C':2, 'D':3, 'E':4, 'F':5, 'G':6, 'H':7,
-			'I':8, 'K':9, 'L':10, 'M':11, 'N':12, 'P':13, 'Q':14,
-			'R':15, 'S':16, 'T':17, 'V':18, 'W':19, 'Y':20, '?':0}'''
-
-
 #sklearn.feature_extraction.DictVectorizer(parse_fasta('singletest1.fasta'))
 #FE = sklearn.preprocessing.OneHotEncoder(n_values=21)
 #print(FE)
 
-def FormatAndFit(parsedseqs, parsedclasses, windowsize):
-	protslist = list(parsedseqs.values())
-	classeslist = list(parsedclasses.values())
-	#print(classeslist)
-	#indexlist = [aaIndex(z) for z in str(parse_fasta('x').values())]
-	#print(indexlist)
+def FormatSeqs(filename, windowsize):
+	parsedseqs = ParseSeqs(filename)
+	#print(parsedseqs)
+	#print(parsedclasses)
+	prots = []
 	features = []
 	classifications = []
 	for key in parsedseqs:
-		count = 0
+
 		#print(parsedseqs[key])
 		for x in range(0,len(parsedseqs[key])):
 			if x<windowsize//2:
@@ -99,15 +93,58 @@ def FormatAndFit(parsedseqs, parsedclasses, windowsize):
 					z+=1
 				elist.extend(aaIndex['?'] * (x+windowsize//2-(len(parsedseqs[key])-1)))
 				features.append(elist)
+		# classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
+		# print(parsedclasses[key])
+		# classifications.extend(classified)
+	# clf = svm.SVC()
+	# clf.fit(features,classifications)
+	return features
+
+def FormatClasses(filename):
+	parsedclasses = ParseClasses(filename)
+	classifications = []
+	for key in parsedclasses:
 		classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
-		#print(parsedclasses[key])
 		classifications.extend(classified)
-		count+=1
-	clf = svm.SVC()
-	clf.fit(features,classifications)
-	return clf
+	return classifications
 
-joblib.dump(FormatAndFit(parsedseqdict,parsedclassdict,5), 'test.pkl')
-print ("\nDumped the model in %0.2f seconds.\n" %(time.time()-call))
 
-print(FormatAndFit(parsedseqdict,parsedclassdict,5))
+
+	# Will probably need to parse PSSM file somehow - let's do that with another function - and into a list.
+
+# small prediction test! do a list(clf.predict(from testpeps2.txt))
+# maybe we do need to do this inside the for loop - with an if statement ? 
+Features = FormatSeqs('globular_signal_peptide_2state.3line.txt',5)
+Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
+
+'''with open('testpepsFeatures.pkl', 'wb') as out:
+	joblib.dump(Features, out)
+with open('testpepsClasses.pkl', 'wb') as ot:
+	joblib.dump(Classifications, ot)'''
+
+clf=svm.SVC()
+clf.fit(Features, Classifications)
+
+with open('testpepsModel.pkl', 'wb') as oot:
+	joblib.dump(clf, oot)
+
+SpIndexR = {0:'S',1:'G'}
+
+FeaturesPred = FormatSeqs('testpeps2.txt',5)
+prediction = list(clf.predict(FeaturesPred))
+gg=''
+for g in prediction:
+	gg += str(g) 
+print(gg)
+with open('testpepsPred.txt', 'w+') as o:
+	o.write(str(ParseSeqs('testpeps2.txt'))+'\n')
+	o.write(str(gg))
+
+
+'''with open('testpepsPred.txt', 'w+') as owt:
+	owt.write('Prediction!' + '\n')
+	owt.write(prediction)'''
+
+
+print ("\nProcessing took %0.2f seconds.\n" %(time.time()-call))
+

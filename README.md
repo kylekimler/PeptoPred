@@ -11,3 +11,7 @@ Starting the switch to Sublime Text! Was able to enter link to Sublime.app in PA
 
 3.2.18 Day ?:
 Created a very ugly encoder using a hard-coded feature map and a few bad if-for statements. I wonder if we could use binary to encode each amino acid using only 5 1/0's - would only take 5 positions instead of 20. First it's more important to test feeding into svm or randomforest. Enjoyed the whale talk today. My favorite blog is http://infoproc.blogspot.com/
+
+3.6.18 Day ??:
+Much work was done this day. Successfully ran my first prediction through a model trained on ~10 proteins - testpeps.txt, of which 2 or 3 had signal peptides. The model missed both signal peptides in the test dataset - testpeps2.txt, just classified everything as globular. Haven't written output yet - just need to save a list of the proteins and their encodings as they are encoded - should be able to write something up to call them after prediction for pred formatting. Read today about featuretools.com. First want to try PSSM. Reading on SignalP's implementation - downloaded their desktop version of the tool but it's linux only - maybe will try looking at their code in the computer lab. Also tried creating a model based on the full dataset but aborted after running for an hour. Started thinking about program organization and re-organized formatting.py - now global sliding window gen is in "FormatSansDict.py"
+
