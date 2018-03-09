@@ -1,13 +1,14 @@
 import time
-import joblib
+from sklearn.externals import joblib
 import sys
 from sklearn import svm
 import sklearn
 import sklearn.externals
+import numpy as np
 
 call = time.time()
 
-def ParseSeqs(filename):
+def ParseSeqstoDict(filename):
 	inputfasta=open(filename,'r')
 	stringmaker = [str(line.rstrip('\n')) for line in inputfasta]
 	for z in range(0,len(stringmaker)-1,3):
@@ -17,7 +18,21 @@ def ParseSeqs(filename):
 	# print(parsedseqs)
 	return parsedseqs
 
+def ParseSeqs(filename):
+	inputfasta=open(filename,'r')
+	stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
+	parsedseqs = [stringmaker[x+1] for x in range(0,len(stringmaker)-1,3)]
+	inputfasta.close()
+	return parsedseqs
+
 def ParseClasses(filename):
+	inputfasta=open(filename,'r')
+	stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
+	parsedseqs = [stringmaker[x+2] for x in range(0,len(stringmaker)-1,3)]
+	inputfasta.close()
+	return parsedseqs
+
+def ParseClassestoDict(filename):
 	inputfasta=open(filename,'r')
 	stringmaker = [str(line.rstrip('\n')) for line in inputfasta]
 	for z in range(0,len(stringmaker),3):
@@ -62,46 +77,55 @@ SpIndex = {'S':0,'G':1}
 #FE = sklearn.preprocessing.OneHotEncoder(n_values=21)
 #print(FE)
 
-def FormatSeqs(filename, windowsize):
-	parsedseqs = ParseSeqs(filename)
-	#print(parsedseqs)
-	#print(parsedclasses)
-	prots = []
+
+
+def Format(filename, windowsize):
 	features = []
 	classifications = []
-	for key in parsedseqs:
-
-		#print(parsedseqs[key])
-		for x in range(0,len(parsedseqs[key])):
-			if x<windowsize//2:
+	parsedseqs = ParseSeqs(filename)
+	
+	if type(parsedseqs[0]) is str:
+		parsed2 = []
+		for item in parsedseqs:
+			seq = []
+			for attribute in item:
+				seq.append(aaIndex[attribute])
+			parsed2.append(seq)
+	parsedclasses = ParseClasses(filename)
+	
+	for item in parsed2:
+		ea = time.time()
+		prot = item
+		count = 0
+		for aa in prot:
+			if count<windowsize//2:
 				flist=[]
-				flist.extend(aaIndex['?']*(windowsize//2-x))
+				flist.extend(aaIndex['?']*(windowsize//2-count))
 				z=0
-				while z <= x+windowsize//2:
-					flist.extend(aaIndex[parsedseqs[key][z]])
+				while z <= count+windowsize//2:
+					flist.extend(prot[z])
 					z+=1
 				features.append(flist)
-			elif len(parsedseqs[key])-windowsize//2 > x >= (windowsize//2-1):
+			elif len(prot)-windowsize//2 > count >= (windowsize//2)-1:
 				middlewindow = []
-				middlewindow.extend(zz for attribute in parsedseqs[key][x-(windowsize//2):x+(windowsize//2)+1] for zz in aaIndex[attribute])
+				for zz in prot[count-(windowsize//2):count+(windowsize//2)+1]:
+					middlewindow.extend(zz)
+					# middlewindow.extend(zz for zz in prot[count-(windowsize//2):count+(windowsize//2)+1])
 				features.append(middlewindow)
-			elif(x>=(len(parsedseqs[key])-windowsize//2)-1):
+			elif(count>=(len(prot)-windowsize//2)-1):
 				elist=[]
-				z = x - (windowsize//2)
-				while z <= len(parsedseqs[key]) - 1:
-					elist.extend(aaIndex[parsedseqs[key][z]])
+				z = count - (windowsize//2)
+				while z <= len(prot) - 1:
+					elist.extend(prot[z])
 					z+=1
-				elist.extend(aaIndex['?'] * (x+windowsize//2-(len(parsedseqs[key])-1)))
+				elist.extend(aaIndex['?'] * (count+windowsize//2-(len(prot)-1)))
 				features.append(elist)
-		# classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
-		# print(parsedclasses[key])
-		# classifications.extend(classified)
-	# clf = svm.SVC()
-	# clf.fit(features,classifications)
+			count+=1
+		print(time.time()-ea)
 	return features
 
 def FormatClasses(filename):
-	parsedclasses = ParseClasses(filename)
+	parsedclasses = ParseClassestoDict(filename)
 	classifications = []
 	for key in parsedclasses:
 		classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
@@ -110,36 +134,53 @@ def FormatClasses(filename):
 
 
 
-	# Will probably need to parse PSSM file somehow - let's do that with another function - and into a list.
-
-# small prediction test! do a list(clf.predict(from testpeps2.txt))
-# maybe we do need to do this inside the for loop - with an if statement ? 
-Features = FormatSeqs('globular_signal_peptide_2state.3line.txt',5)
+Features = Format('globular_signal_peptide_2state.3line.txt', sys.argv[1])
 Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
 
+with open('FullSetFeatureExtraction.pkl', 'wb') as f:
+	joblib.dump(Features, f)
+with open('FullSetClassExtraction.pkl', 'wb') as d:
+	joblib.dump(Classifications, d)
+
+print(len(Features))
+print(len(Classifications))
 '''with open('testpepsFeatures.pkl', 'wb') as out:
 	joblib.dump(Features, out)
 with open('testpepsClasses.pkl', 'wb') as ot:
 	joblib.dump(Classifications, ot)'''
-
-clf=svm.SVC()
+# clf = joblib.load('FullModel.pkl')
+clf=svm.SVC(cache_size=1000)
 clf.fit(Features, Classifications)
 
-with open('testpepsModel.pkl', 'wb') as oot:
+with open('FullModelNonLin%s.pkl' %sys.argv[1], 'wb') as oot:
 	joblib.dump(clf, oot)
 
-SpIndexR = {0:'S',1:'G'}
+'''SpIndexR = {'0':'S','1':'G'}
 
-FeaturesPred = FormatSeqs('testpeps2.txt',5)
+FeaturesPred = Format('testpeps2.txt',15)
+FeaturesPredOut = ParseSeqstoDict('testpeps2.txt')
+
 prediction = list(clf.predict(FeaturesPred))
 gg=''
 for g in prediction:
 	gg += str(g) 
-print(gg)
-with open('testpepsPred.txt', 'w+') as o:
-	o.write(str(ParseSeqs('testpeps2.txt'))+'\n')
-	o.write(str(gg))
+pos = 0
 
+for key in FeaturesPredOut:
+	print('>' + key + '\n')
+	print(FeaturesPredOut[key] + '\n')
+	ggg=[]
+	pos = pos + len(FeaturesPredOut[key])
+	print(pos)
+
+print(gg)'''
+
+
+'''with open('testpepsPred.txt', 'w+') as o:
+	for key in FeaturesPredOut:
+		o.write(key + '\n')
+		o.write(attribute + '\n')
+		o.write(n for n<len(key) in str(gg)+'\n')'''
 
 '''with open('testpepsPred.txt', 'w+') as owt:
 	owt.write('Prediction!' + '\n')
