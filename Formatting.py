@@ -4,7 +4,7 @@ import sys
 from sklearn import svm
 import sklearn
 import sklearn.externals
-import numpy as np
+import pickle
 
 call = time.time()
 
@@ -94,7 +94,6 @@ def Format(filename, windowsize):
 	parsedclasses = ParseClasses(filename)
 	
 	for item in parsed2:
-		ea = time.time()
 		prot = item
 		count = 0
 		for aa in prot:
@@ -121,7 +120,6 @@ def Format(filename, windowsize):
 				elist.extend(aaIndex['?'] * (count+windowsize//2-(len(prot)-1)))
 				features.append(elist)
 			count+=1
-		print(time.time()-ea)
 	return features
 
 def FormatClasses(filename):
@@ -134,58 +132,26 @@ def FormatClasses(filename):
 
 
 
-Features = Format('globular_signal_peptide_2state.3line.txt', sys.argv[1])
-Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
+#Features = Format('globular_signal_peptide_2state.3line.txt', int(sys.argv[1]))
+# Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
 
-with open('FullSetFeatureExtraction.pkl', 'wb') as f:
-	joblib.dump(Features, f)
-with open('FullSetClassExtraction.pkl', 'wb') as d:
-	joblib.dump(Classifications, d)
-
+#with open('FullSetFeatureExtraction%s' %int(sys.argv[1]), 'wb') as f:
+#	pickle.dump(Features, f)
+'''with open('FullSetClassExtraction', 'wb') as d:
+	pickle.dump(Classifications, d)'''
+'''
 print(len(Features))
-print(len(Classifications))
+print(len(Classifications))'''
 '''with open('testpepsFeatures.pkl', 'wb') as out:
 	joblib.dump(Features, out)
 with open('testpepsClasses.pkl', 'wb') as ot:
 	joblib.dump(Classifications, ot)'''
 # clf = joblib.load('FullModel.pkl')
-clf=svm.SVC(cache_size=1000)
-clf.fit(Features, Classifications)
-
-with open('FullModelNonLin%s.pkl' %sys.argv[1], 'wb') as oot:
-	joblib.dump(clf, oot)
-
-'''SpIndexR = {'0':'S','1':'G'}
-
-FeaturesPred = Format('testpeps2.txt',15)
-FeaturesPredOut = ParseSeqstoDict('testpeps2.txt')
-
-prediction = list(clf.predict(FeaturesPred))
-gg=''
-for g in prediction:
-	gg += str(g) 
-pos = 0
-
-for key in FeaturesPredOut:
-	print('>' + key + '\n')
-	print(FeaturesPredOut[key] + '\n')
-	ggg=[]
-	pos = pos + len(FeaturesPredOut[key])
-	print(pos)
-
-print(gg)'''
+'''clf=svm.LinearSVC(cache_size=1000)
+clf.fit(Features, Classifications)'''
 
 
-'''with open('testpepsPred.txt', 'w+') as o:
-	for key in FeaturesPredOut:
-		o.write(key + '\n')
-		o.write(attribute + '\n')
-		o.write(n for n<len(key) in str(gg)+'\n')'''
-
-'''with open('testpepsPred.txt', 'w+') as owt:
-	owt.write('Prediction!' + '\n')
-	owt.write(prediction)'''
 
 
-print ("\nProcessing took %0.2f seconds.\n" %(time.time()-call))
+print ("\nFormatting took %0.2f seconds.\n" %(time.time()-call))
 
