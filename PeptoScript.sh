@@ -1,7 +1,7 @@
 echo -e "
 Greetings and Welcome to PeptoPred. 
 Right now we have a RandomForestClassifier model of the whole dataset, with a window size of 15. 
-RandomForest modeling of the whole dataset takes 764 seconds on 8gb RAM. 
+RandomForest modeling of the whole dataset takes about 14 minutes on a macbook air
 -----------
 In the future, expect to see new feature extraction methods for better training, the option to train on your own dataset, and a cross training option.
 

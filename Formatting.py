@@ -5,6 +5,7 @@ from sklearn import svm
 import sklearn
 import sklearn.externals
 import pickle
+from sklearn.model_selection import cross_val_score
 
 call = time.time()
 
@@ -129,8 +130,6 @@ def FormatClasses(filename):
 		classified = [SpIndex[attribute] for attribute in parsedclasses[key]]
 		classifications.extend(classified)
 	return classifications
-
-
 
 #Features = Format('globular_signal_peptide_2state.3line.txt', int(sys.argv[1]))
 # Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
