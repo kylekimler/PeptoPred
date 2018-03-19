@@ -1,13 +1,21 @@
 echo -e "
 Greetings and Welcome to PeptoPred. 
-Right now we have a RandomForestClassifier model of the whole dataset, with a window size of 15. 
-RandomForest modeling of the whole dataset takes about 14 minutes on a macbook air
------------
-In the future, expect to see new feature extraction methods for better training, the option to train on your own dataset, and a cross training option.
+PeptoPred comes with a training dataset bestowed upon us by the left hand of God
+It also comes with a trained model made by Random Forest Classification and an amino acid window size of 15
+If you want to make a model, run $python3.6 PeptoModel.py {x} where x is the desired window size
+PeptoModel.py is currently set up to create Decision Tree Classifier models, but you can edit it to create the model of your desired
 
-For now,
+RandomForest modeling of the whole included dataset takes about 14 minutes on a macbook air
 
-If you'd like to test some peptides on the model, input the name of a fastafile and this program will output a prediction into the file '[yourfilename]Pred.txt'"
+All created models will appear in the PeptoPred/Models folder.
+----------------------------------------------------------------------
+
+If you'd like to test some peptides on the given model, 
+input the name of a fastafile and this program will output a prediction into the file 'results/[yourfilename]RFC15Pred.txt'
+
+You can easily change the PeptoPred.py file to i/o with your new model - lines 12 and 46
+
+Otherwise, "
 
 read fastain
 
