@@ -11,10 +11,17 @@ call = time.time()
 
 def ParseSeqstoDict(filename):
 	inputfasta=open(filename,'r')
+	lines = inputfasta.readlines()
+	z = str(lines[3][0])
+	inputfasta.close()
+	inputfasta = open(filename, 'r')
+	if(z=='>'):
+		stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
+		parsedseqs = {stringmaker[x]: stringmaker[x+1] for x in range(0,len(stringmaker)-1,3)}
+	elif(z!='>'):
+		stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
+		parsedseqs = {stringmaker[x]: stringmaker[x+1] for x in range(0,len(stringmaker)-1,2)}
 	stringmaker = [str(line.rstrip('\n')) for line in inputfasta]
-	for z in range(0,len(stringmaker)-1,3):
-		stringmaker[z]=stringmaker[z].lstrip('>')
-	parsedseqs = {stringmaker[x]: stringmaker[x+1] for x in range(0,len(stringmaker)-1,3)}
 	inputfasta.close()
 	return parsedseqs
 
@@ -27,7 +34,7 @@ def ParseSeqs(filename):
 	if(z=='>'):
 		stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
 		parsedseqs = [stringmaker[x+1] for x in range(0,len(stringmaker)-1,3)]
-	elif(z=='>'):
+	elif(z!='>'):
 		stringmaker = [str(line.rstrip('\n').lstrip('>')) for line in inputfasta]
 		parsedseqs = [stringmaker[x+1] for x in range(0,len(stringmaker)-1,2)]
 	inputfasta.close()
@@ -117,7 +124,7 @@ def Format(filename, windowsize):
 			count+=1
 	with open('../Extrct/%sFeatureExtraction%s' %(os.path.basename(filename).rstrip('.txt'),windowsize), 'wb') as f:
 		joblib.dump(features, f, compress = 9)
-	pass
+	return features
 
 def FormatClasses(filename):
 	parsedclasses = ParseClassestoDict(filename)
@@ -127,17 +134,8 @@ def FormatClasses(filename):
 		classifications.extend(classified)
 	with open('../Extrct/%sClassExtraction' %(os.path.basename(filename).rstrip('.txt')), 'wb') as f:
 		joblib.dump(classifications, f, compress = 9)
-	pass
+	return classifications
 
-
-#if statement checking to see if files exist
-#Features = Format('globular_signal_peptide_2state.3line.txt', int(sys.argv[1]))
-# Classifications = FormatClasses('globular_signal_peptide_2state.3line.txt')
-
-#with open('FullSetFeatureExtraction%s' %int(sys.argv[1]), 'wb') as f:
-#	pickle.dump(Features, f)
-'''with open('FullSetClassExtraction', 'wb') as d:
-	pickle.dump(Classifications, d)'''
 if('%0.2f' %(time.time()-call) != '0.00'):
 	print ("\nFormatting took %0.2f seconds.\n" %(time.time()-call))
 

@@ -17,9 +17,6 @@ Features = []
 Classifications = []
 filename = '../data/'+(os.path.basename(sys.argv[1]))
 
-#overarching if statement checking to see if there are argv's. otherwise just run as windowsize 15 and on the full set in the data
-
-
 if os.path.isfile('../Extrct/%sClassExtraction' %os.path.basename(sys.argv[1]).rstrip('.txt')):
 	with open('../Extrct/%sClassExtraction'  %os.path.basename(sys.argv[1]).rstrip('.txt'), 'rb') as d:
 		Classifications = joblib.load(d)
@@ -36,10 +33,10 @@ else:
 	with open('../Extrct/%sFeatureExtraction%s' %(str(os.path.basename(sys.argv[1]).rstrip('.txt')), int(sys.argv[2])), 'rb') as f:
 		Features = joblib.load(f)
 
-clf=svm.LinearSVC()
+clf=sklearn.tree.DecisionTreeClassifier()
 model = clf.fit(Features, Classifications)
 
-with open('../Models/FullModelLin%s.pkl' %int(sys.argv[2]), 'wb') as oot:
+with open('../Models/%sDTC%s.pkl' %(os.path.basename(sys.argv[1]).rstrip('.txt'), int(sys.argv[2])), 'wb') as oot:
 	pickle.dump(model, oot)
 
 modtime = time.time()
